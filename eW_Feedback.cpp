@@ -5,34 +5,68 @@ bool feedbackInit()
   pinMode(GREENLED, OUTPUT);
   pinMode(BLUELED, OUTPUT);
   pinMode(VIBRATIONMOTOR, OUTPUT);
+  digitalWrite(GREENLED, HIGH);
+  digitalWrite(BLUELED, HIGH);
+  digitalWrite(VIBRATIONMOTOR, LOW);
 }
 
-void gLedPWM(uint8_t dutyCycle)
+void gLedOn()
+{
+  digitalWrite(GREENLED, LOW);
+}
+
+void gLedOff()
+{
+  digitalWrite(GREENLED, HIGH);
+}
+
+void bLedOn()
+{
+  digitalWrite(BLUELED, LOW);
+}
+
+void bLedOff()
+{
+  digitalWrite(BLUELED, HIGH);
+}
+
+void vibrationOn()
+{
+  digitalWrite(VIBRATIONMOTOR, HIGH);
+}
+
+void vibrationOff()
+{
+  digitalWrite(VIBRATIONMOTOR, LOW);
+}
+
+// nrf52 adc has 14 resolution -> highest value: 16383
+void gLedPWM(uint16_t dutyCycle)
 {
   analogWrite(GREENLED, dutyCycle);
 }
 
-void gLedTurnOff()
+void gLedPWMOff()
 {
   analogWrite(GREENLED, 0);
 }
 
-void bLedPWM(uint8_t dutyCycle)
+void bLedPWM(uint16_t dutyCycle)
 {
   analogWrite(BLUELED, dutyCycle);
 }
 
-void bLedTurnOff()
+void bLedPWMOff()
 {
   analogWrite(BLUELED, 0);
 }
 
-void vibrationPWM(uint8_t dutyCycle)
+void vibrationPWM(uint16_t dutyCycle)
 {
   analogWrite(VIBRATIONMOTOR, dutyCycle);
 }
 
-void vibrationTurnOff()
+void vibrationPWMOff()
 {
   analogWrite(VIBRATIONMOTOR, 0);
 }

@@ -21,9 +21,9 @@ ImuData imuData = {};
 uint8_t buf[ImuData_size] = {0};
 
 //Flag for enabling/disabling the Imu data acquisition and characteristic update
-bool enableImu = false; 
+uint8_t enableImu = 0; 
 
-
+pb_ostream_t stream;
 // set of characteristics - ! Has to be global in the ino for some reason to work...
 BLECharacteristic IMU9DofChar("ad0e768f-d4ae-4aa5-97bb-98300a987864", BLERead | BLENotify , sizeof(buf), true); // remote clients will be able to get notifications if this characteristic changes
 BLECharacteristic WeightChar("ad0e768f-d4ae-4aa5-97bb-98300a987865", BLERead, sizeof(uint16_t), true);
@@ -31,54 +31,87 @@ BLECharacteristic ButtonChar("ad0e768f-d4ae-4aa5-97bb-98300a987866", BLERead | B
 
 void setup()
 {
-  Serial.begin(115200);
+  //Serial.begin(115200);
   BLEinit(deviceID, IMU9DofChar, sizeof(buf), WeightChar, sizeof(uint16_t), ButtonChar, sizeof(uint16_t));
   NFCinit();
   ICMinit();
   buttonInit();
+  feedbackInit();
 }
 
-void loop()
-{
-  while(bleIsConntected())
-  { 
-    pb_ostream_t stream;
-    //waitForNFCTag();
-    if(tagFound()){
-      readWeightTag(totalWeightInGram, weightKey, weightID);
+void loop() {
+  bLedOn();
+  if(totalWeightInGram == 0){
+    gLedOff();
+  }
+  // bLedOff();
+  // gLedOff();
+  if(bleIsConntected())
+  { // timeout in ms for the tagFound() function to find a present tag after the timeout code proceeds
+
+    // if no weight is detected
+    if(totalWeightInGram == 0){
+      if (tagFound(50)) // search for a weight
+      {
+        Serial.println(totalWeightInGram);
+        if(readWeightTag(totalWeightInGram, weightKey, weightID)){
+          Serial.println("Weight read!");
+          WeightChar.writeValue(totalWeightInGram);
+          gLedOn();
+          // Vibration feedback to be done
+        }
+      }
     }
-    if(buttonIsPressed()) {
-      enableImu = true;
+    // Trigger IMUenable flag upon buttonPress to start IMU Data acquisition
+    if (buttonIsPressed() && totalWeightInGram != 0) 
+    {
+      enableImu = 1;
+      ButtonChar.writeValue(enableImu);
       Serial.println("IMU turned on");
     }
-    while(enableImu) { 
+
+
+    // Start IMU Data acquisition
+    while (enableImu) {
+      // initialize protobuf stream - has to happen inside the loop, else the first iteration 
+      // of IMUon/-of wont be updated
+      pb_ostream_t stream;
+
+      // get SensorData
       ICMupdate(&imuData);
 
-        // Encode the data using protobuf library
+      // Encode the data using protobuf library
       stream = pb_ostream_from_buffer(buf, sizeof(buf));
       bool encode_status = pb_encode(&stream, ImuData_fields, &imuData);
-      if (!encode_status)
-      {
+      if (!encode_status) {
         Serial.println("Failed to encode");
         break;
       }
 
-      if(!IMU9DofChar.writeValue(buf, sizeof(buf))){
+      gLedOn();
+      bLedOff();
+      // Update IMU Characteristic
+      if (!IMU9DofChar.writeValue(buf, sizeof(buf))) {
         Serial.println("Failed to update Characteristic!");
       }
-      if(buttonIsPressed()) {
-        enableImu = false;
+      // if buttonIsPressed() stop the data acquisition
+      if (buttonIsPressed()) {
+        enableImu = 0;
+        ButtonChar.writeValue(enableImu);
         Serial.println("IMU turned off");
+        // Write ZeroArray into Char to seperate IMU Measurements
+        uint8_t zeroArray[45] = {0};
+        IMU9DofChar.writeValue(zeroArray, sizeof(zeroArray));
+        totalWeightInGram = 0;
+        WeightChar.writeValue(totalWeightInGram);
       }
     }
   }
-  
-  Serial.println("Waiting for connection...");
-  while (!bleIsConntected())
-  {
+  // Initialize BLE connection if not existing
+  while (!bleIsConntected()) {
     bleWaitForConnection();
     delay(500);  // Warte 500ms, bevor du erneut prüfst.
-    }
+  }
 }
 
 

@@ -21,8 +21,8 @@ void NFC_weight_reader::update() {
     }
 }
 
-bool NFC_weight_reader::scan() {
-    _has_tag = _nfc->tagPresent();
+bool NFC_weight_reader::scan(uint16_t timeout) {
+    _has_tag = _nfc->tagPresent(timeout);
     return _has_tag;
 }
 

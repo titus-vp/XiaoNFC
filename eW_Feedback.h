@@ -1,21 +1,33 @@
+// eW_Feedback.h
+
 #ifndef EW_FEEDBACK_H
 #define EW_FEEDBACK_H
 
 #include "Arduino.h"
 
-#define GREENLED 29
+#define GREENLED 3
 #define BLUELED 5
-#define VIBRATIONMOTOR 3
+#define VIBRATIONMOTOR 1
 
 bool feedbackInit();
 
-void gLedPWM(uint8_t dutyCycle);
-void gLedTurnOff();
+void gLedOn();
+void gLedOff();
 
-void bLedPWM(uint8_t dutyCycle);
-void bLedTurnOff();
+void bLedOn();
+void bLedOff();
 
-void vibrationPWM(uint8_t dutyCycle);
-void vibrationTurnOff();
+void vibrationOn();
+void vibrationOff();
+
+// nrf52 adc has 14 resolution -> highest value: 16383
+void gLedPWM(uint16_t dutyCycle);
+void gLedPWMOff();
+
+void bLedPWM(uint16_t dutyCycle);
+void bLedPWMOff();
+
+void vibrationPWM(uint16_t dutyCycle);
+void vibrationPWMOff();
 
 #endif

@@ -1,9 +1,9 @@
 #include "NFC_dev.h"
 
-void NFC_dev::waiter() {
+void NFC_dev::waiter(uint16_t timeout) {
     print("Waiting for Tag");
     int i = 0;
-    while (!_nfc->tagPresent()) {
+    while (!_nfc->tagPresent(timeout)) {
         i++;
         if (i >= _wait * 10) {
             i = 0;

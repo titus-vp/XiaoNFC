@@ -3,11 +3,8 @@
 
 // Function to initialize ICM20948
 void ICMinit() {
-  SERIAL_PORT.begin(115200);  // Initialize the serial port
-  
-  // Wait for the serial port to be ready
-  while (!SERIAL_PORT) {};
-  
+  //SERIAL_PORT.begin(115200);  // Initialize the serial port
+    
   debugPrint("Initializing ICM20948");  // Print initialization message if in debug mode
   SPI_PORT.begin();  // Initialize the SPI port
 
@@ -48,7 +45,6 @@ void ICMupdate(ImuData* imuData) {
     imuData->mY = myICM.magY();
     imuData->mZ = myICM.magZ();
     
-    delay(1);  // Processing delay
     debugPrint("IMU_Data fetched");  // Print fetched message if in debug mode
   } else {
     debugPrint("Waiting for data");  // Print waiting message if in debug mode

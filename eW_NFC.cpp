@@ -14,14 +14,14 @@ void NFCinit()
   Serial.println("Setup Done!");
 }
 
-void waitForNFCTag()
+void waitForNFCTag(uint16_t timeout)
 {
-  NFC_DEV.waiter();
+  NFC_DEV.waiter(timeout);
 }
 
-bool tagFound()
+bool tagFound(uint16_t timeout)
 {
-  if (!NFC_DEV.scan()) {
+  if (!NFC_DEV.scan(timeout)) {
     Serial.println("No card?");
     return false;
   }

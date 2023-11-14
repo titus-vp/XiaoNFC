@@ -58,9 +58,12 @@ bool bleWaitForConnection()
     // turn on the LED to indicate the connection:
     //digitalWrite(LED_BUILTIN, HIGH);
     
-    return true;
-  }
-  else{
+    if(central.hasService("49cc6a9e-0fa3-493b-b290-e1ac59909dec")){
+      return true;
+    } else {
+      return false;
+    }
+  } else {
     return false;
   }
 }
@@ -68,6 +71,7 @@ bool bleWaitForConnection()
 bool bleIsConntected()
 {
   if (central.connected()){
+
     return true;
   }
   else{

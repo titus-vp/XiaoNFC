@@ -11,7 +11,7 @@ public:
 
     void write(unsigned int key, unsigned int weight_id, unsigned int weight);
 
-    void waiter();
+    void waiter(uint16_t timeout = 0);
 
     void debug(Stream &stream);
 private:

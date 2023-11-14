@@ -12,7 +12,7 @@ public:
     bool begin();
     void update();
 
-    bool scan();
+    bool scan(uint16_t timeout = 0);
 
     void read();
 
