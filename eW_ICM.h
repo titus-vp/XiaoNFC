@@ -33,4 +33,6 @@ void printScaledAGMT(ICM_20948_SPI *sensor);
 
 void calculateSampleRate();
 
+bool shouldUpdate(float desiredRate);
+
 #endif

@@ -1,8 +1,18 @@
+//TODO
+// - Implement DMP in IMU for setting the SampleRate within the IMU - currently samples with >400 Hz but only writes with shouldUpdate(sampleRate)
+
+
+
 #include "eW_ICM.h"  // Include necessary header file(s)
 
+//globals for calucaleSampleRate()
 unsigned long lastMillis = 0;  // To store the last time the counter was reset
 unsigned long updateCounter = 0;  // Counter for the number of times ICMupdate is called
 float sampleRate = 0;  // Variable to store the calculated sample rate
+
+// Global variables for shouldUpdate()
+unsigned long lastICMupdateMillis = 0;
+float imuSampleRate = 0.0;
 
 // Function to initialize ICM20948
 void ICMinit() {
@@ -139,4 +149,22 @@ void calculateSampleRate() {
     Serial.print(sampleRate);
     Serial.println(" Hz");
   }
+}
+
+
+
+bool shouldUpdate(float desiredRate) {
+    unsigned long currentMillis = millis();
+    unsigned long elapsedTime = currentMillis - lastICMupdateMillis;
+
+    // Calculate the desired time interval between updates based on the desired sample rate
+    unsigned long desiredInterval = static_cast<unsigned long>(1000.0 / desiredRate);
+
+    // Check if the desired interval has elapsed
+    if (elapsedTime >= desiredInterval) {
+        // Update the last update time
+        lastICMupdateMillis = currentMillis;
+        return true;
+    }
+    return false;
 }
