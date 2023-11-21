@@ -26,11 +26,11 @@ bool NFC_weight_reader::scan(uint16_t timeout) {
     return _has_tag;
 }
 
-void NFC_weight_reader::read() {
+void NFC_weight_reader::read(uint8_t &error_flag) {
     if (!_has_tag) {
         return;
     }
-    NfcTag tag = _nfc->read();
+    NfcTag tag = _nfc->read(error_flag);
 
     _uid = tag.getUidString();
 

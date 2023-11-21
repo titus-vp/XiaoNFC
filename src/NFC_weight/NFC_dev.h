@@ -7,7 +7,7 @@ class NFC_dev : public NFC_weight_reader {
 public:
     void format();
     void clean();
-    void dump();
+    void dump(uint8_t &error_flag);
 
     void write(unsigned int key, unsigned int weight_id, unsigned int weight);
 

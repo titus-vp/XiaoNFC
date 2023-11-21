@@ -1,6 +1,9 @@
 #include "eW_BLE.h"
 
 BLEDevice central;
+//AdvertisingParameters advParams;
+
+
 BLEService eWeightService("49cc6a9e-0fa3-493b-b290-e1ac59909dec");
 
 
@@ -11,9 +14,11 @@ void BLEinit(const char* deviceID, BLECharacteristic charIMU, int bufferSize, BL
     Serial.println("starting BLE failed!");
     while (1);
   }
-  
+  //advertising_power_t tx_power = 4; // dBm // maybe not set, but doesnt affect rssi 
+  //advParams.setTxPower(tx_power);
   BLE.setDeviceName(deviceID);
   BLE.setLocalName(deviceID);
+
 
    //byte data[5] = { 0x0e, 0x0e, 0x0e}; //doesnt work from arduino side right now
  // BLE.setManufacturerData(data, 3);
@@ -41,7 +46,6 @@ void BLEinit(const char* deviceID, BLECharacteristic charIMU, int bufferSize, BL
 
      Serial.println("Bluetooth® device active, waiting for connections...");
   }
-
 }
 
 bool bleWaitForConnection()
@@ -59,16 +63,16 @@ bool bleWaitForConnection()
     //digitalWrite(LED_BUILTIN, HIGH);
     
     if(central.hasService("49cc6a9e-0fa3-493b-b290-e1ac59909dec")){
-      return true;
-    } else {
-      return false;
+      if(central.characteristicCount() == 3){
+        return true;
+      }
     }
   } else {
     return false;
   }
 }
 
-bool bleIsConntected()
+bool bleIsConnected()
 {
   if (central.connected()){
 
@@ -91,3 +95,6 @@ void updateUint16_tCharacteristic(BLECharacteristic characteristic, const uint16
     Serial.println("Failed to update Arr Characteristic");
   }
 }
+
+
+

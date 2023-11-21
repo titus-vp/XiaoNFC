@@ -3,8 +3,12 @@
 
 
 #include <ArduinoBLE.h>
+// #include <AdvertisingParameters.h>
+// using namespace ble;
+// #include <ble/gap/Types.h>  
 
 extern BLEDevice central;
+// extern AdvertisingParameters advParams;
 // extern BLEService eWeightService;
 // extern BLECharacteristic IMU9DofPackage;
 // extern BLECharacteristic TotalWeightInGram;
@@ -15,10 +19,11 @@ void BLEinit(const char* deviceID,BLECharacteristic charIMU, int bufferSize,BLEC
 
 bool bleWaitForConnection();
 
-bool bleIsConntected();
+bool bleIsConnected();
 
 void updateArrCharacteristic(BLECharacteristic characteristic, const uint8_t arr[], int lengthOfArray);
 
 void updateUint16_tCharacteristic(BLECharacteristic characteristic, const uint16_t value);
+
 
 #endif

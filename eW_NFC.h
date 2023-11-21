@@ -5,7 +5,7 @@
 
 extern NFC_dev NFC_DEV;
 
-extern uint16_t totalWeightInGram;
+extern float totalWeightInGram;
 extern uint8_t weightKey;
 extern uint8_t weightID;
 
@@ -15,7 +15,6 @@ void waitForNFCTag(uint16_t timeout = 0);
 
 bool tagFound(uint16_t timeout = 0);
  
-bool readWeightTag(uint16_t &totalWeightInGram, uint8_t &weightID, uint8_t &weightKey);
-
+bool readWeightTag(float &totalWeightInGram, uint8_t &weightID, uint8_t &weightKey, uint8_t &errorFlag);
 
 #endif

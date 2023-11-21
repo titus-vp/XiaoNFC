@@ -25,10 +25,12 @@ void debugPrint(const char* message);
 
 void ICMinit();
 
-void ICMupdate(ImuData* imuData);
+bool ICMupdate(ImuData* imuData);
 
 void printFormattedFloat(float val, uint8_t leading, uint8_t decimals);
 
 void printScaledAGMT(ICM_20948_SPI *sensor);
+
+void calculateSampleRate();
 
 #endif

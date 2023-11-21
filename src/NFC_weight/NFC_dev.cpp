@@ -64,8 +64,8 @@ void NFC_dev::print(const String& text) {
     _debug->println(text);
 }
 
-void NFC_dev::dump() {
+void NFC_dev::dump(uint8_t &error_flag) {
     waiter();
-    NfcTag tag = _nfc->read();
+    NfcTag tag = _nfc->read(error_flag);
     tag.print();
 }

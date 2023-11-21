@@ -1,5 +1,8 @@
 #include "eW_ICM.h"  // Include necessary header file(s)
 
+unsigned long lastMillis = 0;  // To store the last time the counter was reset
+unsigned long updateCounter = 0;  // Counter for the number of times ICMupdate is called
+float sampleRate = 0;  // Variable to store the calculated sample rate
 
 // Function to initialize ICM20948
 void ICMinit() {
@@ -12,20 +15,21 @@ void ICMinit() {
 
   // Set sample rates for internal accelerometer and gyroscope
   ICM_20948_smplrt_t smplrt;
-  smplrt.a = 8;
-  smplrt.g = 8;
-  myICM.setSampleRate(ICM_20948_Internal_Acc, smplrt);
-  myICM.setSampleRate(ICM_20948_Internal_Gyr, smplrt);
-
+  smplrt.a = 10;
+  smplrt.g = 10;
+  Serial.print("setAccSampleRate = "); Serial.println(myICM.setSampleRate(ICM_20948_Internal_Acc, smplrt));
+  Serial.print("setGyrSampleRate = "); Serial.println(myICM.setSampleRate(ICM_20948_Internal_Gyr, smplrt));
+  
   debugPrint(myICM.statusString());  // Print status message if in debug mode
   if (myICM.status != ICM_20948_Stat_Ok) {
     debugPrint("Trying again...");  // Print message if status is not ok
     delay(500);
   }
+
 }
 
 // Function to update IMU data
-void ICMupdate(ImuData* imuData) {
+bool ICMupdate(ImuData* imuData) {
   debugPrint("ICM_updating...");  // Print updating message if in debug mode
   if (myICM.dataReady()) {
     myICM.getAGMT();  // Update AGMT data
@@ -45,10 +49,12 @@ void ICMupdate(ImuData* imuData) {
     imuData->mY = myICM.magY();
     imuData->mZ = myICM.magZ();
     
-    debugPrint("IMU_Data fetched");  // Print fetched message if in debug mode
+    debugPrint("IMU_Data fetched");
+    updateCounter++;
+    return true;  // Print fetched message if in debug mode
   } else {
     debugPrint("Waiting for data");  // Print waiting message if in debug mode
-    delay(500);
+    return false;
   }
   //printScaledAGMT(&myICM);  // Call the function to print scaled AGMT data
 }
@@ -109,4 +115,28 @@ void printScaledAGMT(ICM_20948_SPI *sensor) {
   SERIAL_PORT.print(", ");
   printFormattedFloat(sensor->magZ(), 5, 2);
   SERIAL_PORT.println();
+}
+
+
+// Function to calculate the sample rate
+void calculateSampleRate() {
+  unsigned long currentMillis = millis();
+
+  // Calculate the time elapsed since the last counter reset
+  unsigned long elapsedTime = currentMillis - lastMillis;
+
+  // Check if one minute has passed (60000 milliseconds)
+  if (elapsedTime >= 10000) {
+    // Calculate the sample rate in Hz
+    sampleRate = static_cast<float>(updateCounter) / (elapsedTime / 1000.0);
+
+    // Reset the counter and update the lastMillis
+    updateCounter = 0;
+    lastMillis = currentMillis;
+
+    // Print or use the calculated sample rate as needed
+    Serial.print("Sample Rate: ");
+    Serial.print(sampleRate);
+    Serial.println(" Hz");
+  }
 }

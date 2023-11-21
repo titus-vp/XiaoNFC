@@ -14,7 +14,7 @@ public:
 
     bool scan(uint16_t timeout = 0);
 
-    void read();
+    void read(uint8_t &error_flag);
 
     void set_scan_interval(int scan_interval);
 

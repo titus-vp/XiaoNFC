@@ -2,7 +2,7 @@
 
 NFC_dev NFC_DEV;
 
-uint16_t totalWeightInGram = 0;
+float totalWeightInGram = 0;
 uint8_t weightKey = 0;
 uint8_t weightID = 0;
 
@@ -30,15 +30,15 @@ bool tagFound(uint16_t timeout)
   }
 }
 
-bool readWeightTag(uint16_t &totalWeightInGram, uint8_t &weightID, uint8_t &weightKey)
+bool readWeightTag(float &totalWeightInGram, uint8_t &weightID, uint8_t &weightKey,uint8_t &errorFlag)
 {
-  NFC_DEV.read();
+  NFC_DEV.read(errorFlag);
 
   if (!NFC_DEV.check_data()) {
     Serial.println("No data read");
     return false;
   }
-
+  
   totalWeightInGram = NFC_DEV.get_weight();
   Serial.print("Weight: ");
   Serial.println(totalWeightInGram);
