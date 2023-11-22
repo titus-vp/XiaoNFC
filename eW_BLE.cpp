@@ -5,11 +5,14 @@ BLEDevice central;
 
 
 BLEService eWeightService("49cc6a9e-0fa3-493b-b290-e1ac59909dec");
+//BLEService batteryService("180F");
 
 
-void BLEinit(const char* deviceID, BLECharacteristic charIMU, int bufferSize, BLECharacteristic charWeight, int valueSizeWeight,BLECharacteristic charButton, int valueSizeButton)
+//uint8_t oldBatteryPercentage = 0;  // last battery level reading from analog input
+//long previousMillis = 0;  // last time the battery level was checked, in ms
+
+void BLEinit(const char* deviceID, BLECharacteristic charIMU, int bufferSize, BLEIntCharacteristic charWeight, int valueSizeWeight,BLECharacteristic charButton, int valueSizeButton)
 { 
-
   if (!BLE.begin()) {
     Serial.println("starting BLE failed!");
     while (1);
@@ -26,8 +29,12 @@ void BLEinit(const char* deviceID, BLECharacteristic charIMU, int bufferSize, BL
   eWeightService.addCharacteristic(charIMU); // 
   eWeightService.addCharacteristic(charWeight);
   eWeightService.addCharacteristic(charButton);
-  
+
+  //BLE.setAdvertisedService(batteryService);
+  //batteryService.addCharacteristic(batteryPercentageChar);
+
   BLE.addService(eWeightService); // Add the service
+  //BLE.addService(batteryService);
 
   uint8_t zeroArray[bufferSize] = {0};
   charIMU.writeValue(zeroArray, bufferSize); // set initial value for this characteristics
@@ -40,6 +47,9 @@ void BLEinit(const char* deviceID, BLECharacteristic charIMU, int bufferSize, BL
   uint16_t initialButtonVal = 0;
   charButton.writeValue(initialButtonVal);
   delay(10);
+
+  //batteryPercentageChar.writeValue(oldBatteryPercentage);
+  //delay(10);
 
   // start advertising
   if(BLE.advertise()){
@@ -96,5 +106,21 @@ void updateUint16_tCharacteristic(BLECharacteristic characteristic, const uint16
   }
 }
 
+//void batLevelInit(){
+  //analogAcquisitionTime(AT_15_US);
+  //analogReference(AR_INTERNAL2V4);
+//}
+
+
+// // shows realistiv values - anyway has to be further evaluated before usage
+// uint8_t updateBatteryLevel() {
+//   const float vRef = 2.4; // V
+//   int adcVal = analogRead(BATTERYPIN);
+//   float voltage = 2*(adcVal * vRef) / 1023;
+//   Serial.print("Battery Voltage = ");Serial.print(voltage); Serial.println("V");
+  
+//   uint8_t batteryPercentage = map(voltage*10, 32 , 42, 0, 100);
+//   return batteryPercentage;
+// }
 
 

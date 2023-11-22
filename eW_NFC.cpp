@@ -22,7 +22,7 @@ void waitForNFCTag(uint16_t timeout)
 bool tagFound(uint16_t timeout)
 {
   if (!NFC_DEV.scan(timeout)) {
-    Serial.println("No card?");
+    //Serial.println("No card?");
     return false;
   }
   else{

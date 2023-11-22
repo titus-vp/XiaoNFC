@@ -10,7 +10,7 @@
 #include "eW_Button.h"
 
 // can be turned on to receive some debug messages but only implemented for eW_ICM.h
-#define DEBUG 0
+//#define DEBUG 
 
 
 // The name that is used for local and device name of BLE - important for connection with app at this point
@@ -32,7 +32,7 @@ uint8_t tagErrorFlag = 0;
 BLECharacteristic IMU9DofChar("ad0e768f-d4ae-4aa5-97bb-98300a987864", BLERead | BLENotify , sizeof(buf), true); // remote clients will be able to get notifications if this characteristic changes
 BLEIntCharacteristic WeightChar("ad0e768f-d4ae-4aa5-97bb-98300a987865", BLERead | BLENotify);
 BLECharacteristic ButtonChar("ad0e768f-d4ae-4aa5-97bb-98300a987866", BLERead | BLENotify ,sizeof(enableImu), true);
-
+//BLECharCharacteristic batteryPercentageChar("2A19", BLERead | BLENotify); 
 void setup()
 {
   Serial.begin(115200);
@@ -41,90 +41,111 @@ void setup()
   ICMinit();
   buttonInit();
   feedbackInit();
+  //batLevelInit();
 }
 
 void loop() {
-  Serial.println(enableImu);
   
-  if(totalWeightInGram == 0 && enableImu == 0){
+  if( !totalWeightInGram && !enableImu){
     bLedOn();
     gLedOff();
   }
-  
-  if(bleIsConnected())
-  { 
-    
-    tagErrorFlag = 0;
-    if(totalWeightInGram == 0 && enableImu == 0){
-      delay(10);
-      if (tagFound(80)) // search for a weight
-      {
-        if(readWeightTag(totalWeightInGram, weightKey, weightID, tagErrorFlag)){
-          //Serial.print("tagErrorFlag = "); Serial.println(tagErrorFlag);
+  if(bleIsConnected()){
+// reset all characteristics if dc may occur
+  uint8_t zeroArray[sizeof(buf)] = {0};
+  IMU9DofChar.writeValue(zeroArray, sizeof(buf)); // set initial value for this characteristics
+  delay(1);
 
-          if(!tagErrorFlag && totalWeightInGram != 0){
-            if(WeightChar.writeValue(totalWeightInGram)) // encode weight in g
+  uint16_t initial_weight_g = 0;
+  WeightChar.writeValue(initial_weight_g);
+  delay(1);
+  
+  uint16_t initialButtonVal = 0;
+  ButtonChar.writeValue(initialButtonVal);
+  delay(1);
+
+// loop from here until ble dc
+    while(bleIsConnected())
+    {     
+      if(!totalWeightInGram && !enableImu){
+        Serial.println("Searching for Tag");
+        bLedOn();
+        gLedOff();
+        // tagfound is blocking and thus drops ble RSSI - 
+        if (tagFound(50)) // search for a weight
+        {
+          tagErrorFlag = 0;
+          if(readWeightTag(totalWeightInGram, weightKey, weightID, tagErrorFlag))
+          {
+            if(!tagErrorFlag && totalWeightInGram != 0)
             {
-              delay(50);
-              gLedOn();
-              vibrationOn();
-              delay(100);
-              vibrationOff();
+              if(WeightChar.writeValue(totalWeightInGram)) 
+              {
+                gLedOn();
+                vibrationOn();
+                delay(100);
+                vibrationOff();
+              }
+            }
+          }
+          else{
+            // if failed to readTag, reset to re-read
+            totalWeightInGram = 0;
+          }
+        }
+      }
+      // Trigger IMUenable flag upon buttonPress to start IMU Data acquisition
+      if (buttonIsPressed() && totalWeightInGram != 0 && enableImu == 0)
+      {
+        enableImu = 1;
+        if(ButtonChar.writeValue(enableImu))
+        {
+          Serial.println("IMU turned on");
+        }
+      }
+
+
+      // Start IMU Data acquisition
+      // it is important to ask after bleIsConnected() so the characteristics will be updated at the first iteration
+      while(enableImu && bleIsConnected()) {
+        gLedOn();
+        bLedOff();
+        if(shouldUpdate(desiredSampleRate)) {
+          // get SensorData
+          if(ICMupdate(&imuData))
+          {
+            // Encode the data using protobuf library
+            pb_ostream_t stream = pb_ostream_from_buffer(buf, sizeof(buf));
+            bool encode_status = pb_encode(&stream, ImuData_fields, &imuData);
+            if (!encode_status) {
+              Serial.println("Failed to encode");
+            }
+
+            // print buf values
+            // for (int i = 0; i < sizeof(buf); i++) {
+            //   Serial.print(buf[i], HEX);
+            //   Serial.print(' ');
+            // }
+            // Serial.println();
+
+            // Update IMU Characteristic
+            if (!IMU9DofChar.writeValue(buf, sizeof(buf))) {
+              Serial.println("Failed to update Characteristic!");
+            } else {
+            //calculateSampleRate();
             }
           }
         }
-        else{
-          // if failed to readTag, reset to re-read
+        // if buttonIsPressed() stop the data acquisition
+        if (buttonIsPressed() && enableImu) {
+          enableImu = 0;
+          if(ButtonChar.writeValue(enableImu))
+          {
+            Serial.println("IMU turned off");
+          }
           totalWeightInGram = 0;
-        }
+        } 
       }
-    }
-    // Trigger IMUenable flag upon buttonPress to start IMU Data acquisition
-    if (buttonIsPressed() && totalWeightInGram != 0 && enableImu == 0)
-    {
-      enableImu = 1;
-      if(ButtonChar.writeValue(enableImu))
-      {
-        Serial.println("IMU turned on");
-      }
-    }
-
-
-    // Start IMU Data acquisition
-    if(enableImu) {
-      gLedOn();
-      bLedOff();
-      if(shouldUpdate(desiredSampleRate)) {
-        // get SensorData
-        if(ICMupdate(&imuData))
-        {
-          Serial.println("I am so Updating Eldask");
-          // Encode the data using protobuf library
-          pb_ostream_t stream = pb_ostream_from_buffer(buf, sizeof(buf));
-          bool encode_status = pb_encode(&stream, ImuData_fields, &imuData);
-          if (!encode_status) {
-            Serial.println("Failed to encode");
-          }
-
-          // Update IMU Characteristic
-          if (!IMU9DofChar.writeValue(buf, sizeof(buf))) {
-            Serial.println("Failed to update Characteristic!");
-          } else {
-          Serial.println("IMU Char written!");
-          calculateSampleRate();
-          }
-        }
-      }
-      Serial.println("Checking Button");
-      // if buttonIsPressed() stop the data acquisition
-      if (buttonIsPressed() && enableImu ) {
-        enableImu = 0;
-        if(ButtonChar.writeValue(enableImu))
-        {
-          Serial.println("IMU turned off");
-        }
-        totalWeightInGram = 0;
-      } 
     }
   }
   // Initialize BLE connection if not existing
